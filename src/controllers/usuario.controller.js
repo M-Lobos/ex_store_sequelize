@@ -1,10 +1,9 @@
 import { Usuario } from "../models/Usuario.model.js"
 
-export const createUser = async (req, res) => {
+export const createUser = async (req, res, next) => {
 
     try {
-        const data = req.body
-        const user = await Usuario.create(data);
+        const user = await Usuario.create(req.body);
 
         res.status(201).json({
             message: 'Usuario creado con éxito',
@@ -13,7 +12,7 @@ export const createUser = async (req, res) => {
         })
 
     } catch (error) {
-        console.error()
+        next(error)
     }
 }
 
