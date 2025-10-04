@@ -10,7 +10,6 @@ import { ValidationError } from "../../errors/TypeError.js";
  * @throws {ValidationError}    - Si el valor exista arrojará error de validación 
  */
 
-
 export const validateExistData = async (Modelo, data, field, excluidID = null) => {
     if (data[field]) {
         const whereClause = { [field]: data[field] }
@@ -24,7 +23,5 @@ export const validateExistData = async (Modelo, data, field, excluidID = null) =
         if (existData) {
             throw new ValidationError(`El campo "${field}" ya está en uso por otro registro en "${Modelo}"`)
         }
-
     }
-
 }
