@@ -1,5 +1,5 @@
 import { CustomError } from "../errors/CustomError.js"
-import { InternalServerError } from "../errors/TypeError"
+import { InternalServerError } from "../errors/TypeError.js"
 
 
 export const errorHandler = (err, req, res, next) => {
