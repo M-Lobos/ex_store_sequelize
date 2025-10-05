@@ -25,3 +25,9 @@ export const validateExistData = async (Modelo, data, field, excluidID = null) =
         }
     }
 }
+
+export const isEmptyResponseData = (data) => {
+    if(!data || data.length === 0) {
+        throw new ValidationError('La data solicitada no pudo ser encontrada')
+    }
+}
