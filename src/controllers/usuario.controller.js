@@ -1,7 +1,8 @@
 import { Op } from "sequelize";
 import { Usuario } from "../models/Usuario.model.js"
 import { validateExistData, isEmptyResponseData } from "../utils/validations/validate.js"
-import { NotFoundError } from "../errors/TypeError.js";
+import { NotFoundError, ValidationError } from "../errors/TypeError.js";
+
 
 export const createUser = async (req, res, next) => {
 
@@ -77,7 +78,7 @@ export const updateUser = async (req, res, next) => {
         await validateExistData(
             Usuario,
             updateData,
-            ["email"],
+            ["email"],  //mandamos al menos uno como arreglo que el método de validación así lo pide
             id
         );
 
@@ -106,12 +107,21 @@ export const updateUser = async (req, res, next) => {
     }
 }
 
-export const userSoftDelete = async (req, res) => {
+export const userSoftDelete = async (req, res, next) => {
+    // es importarte destacar que todos los delete de base que trae sequelize son soft-delete, lo que nos ahorra trabajar con active
     try {
-        const { id } = req.params
-        const user = await Usuario.findByPk(id)
 
-        isEmptyResponseData(user)
+        const { id } = req.params;
+        const user = await Usuario.findByPk(id, { paranoid: false });
+
+        isEmptyResponseData(user);
+
+        if (user.deletedAt !== null) {
+            console.log(user.deletedAt);
+            const error = new Error(`El usuario con ID ${id} ya está inactivo/eliminado.`);
+            error.status = 409; // 409 Conflict
+            throw error;
+        }
 
         await user.destroy();
 
@@ -119,37 +129,49 @@ export const userSoftDelete = async (req, res) => {
             message: 'Usuario Eliminado con éxito',
             status: 200,
         })
-
-
     } catch (error) {
         next(error)
     }
 }
 
-/* export const getUserByFilters = async (req, res, next) => {
-
+export const getUserByFilters = async (req, res, next) => {
     try {
-        const filters = req.query // aquí se devuelve un objeto que trae los filtros
-        const whereClause = {}
+        // 1. Desestructura para separar 'logic' del resto
+        const { logic, ...restFilters } = req.query; // aquí se devuelve un objeto que trae los filtros y la lógica
 
-        console.log("filters", filters)
+        let whereClause = {}; // Si no hay filtros, whereClause será {}, lo que devuelve todos los usuarios.
 
-        for (const key in filters) {
-            if (Object.hasOwn(filters, `${key}`)) {
-                whereClause[key] = filters[key]
+        // 2. Obtener los filtros, excluyendo 'logic'
+        const actualFilters = restFilters; // { key_filtro_1: 'value_filtro_1', key_filtro_2: 'value_filtro_2' }
+        const filterKeys = Object.keys(actualFilters);
+
+
+        // 3. Lógica Condicional para AND o OR
+        if (logic === 'or' && filterKeys.length > 0) {
+            // Caso OR: Construir un array de condiciones para Op.or
+            const conditionOr = [];
+            for (const key of filterKeys) {
+                conditionOr.push({ [key]: actualFilters[key] });
+                console.log("arreglo conditionOr", key, conditionOr);
             }
+
+            // Aplicar el operador OR
+            whereClause = {
+                [Op.or]: conditionOr
+            };
+        } else if (filterKeys.length > 0) {
+            whereClause = actualFilters;
         }
 
-        console.log("clausula", whereClause);
-
+        // 4. Ejecutar la consulta con la cláusula dinámica, whereClauses puede ser objeto AND o OR
         const users = await Usuario.findAll({
-            where: { ...whereClause, },  // para sequelize, esto es un AND por defecto  
+            where: whereClause,
             attributes: {
                 exclude: [
                     'createdAt', 'updatedAt', 'deletedAt'
                 ]
             }
-        })
+        });
 
         isEmptyResponseData(users);
 
@@ -157,76 +179,88 @@ export const userSoftDelete = async (req, res) => {
             message: "Usuarios encontrados con éxito",
             status: 200,
             data: users
+        });
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+/* ADMIN CONTROLLERS */
+
+export const getAllUsersIncludedDeleted = async (req, res, next) => {
+    try {
+        const users = await Usuario.findAll({ paranoid: false })
+
+        isEmptyResponseData(users)
+
+        res.status(200).json({
+            message: 'Usuarios encontrados con éxito',
+            status: 200,
+            data: users
         })
 
     } catch (error) {
         next(error)
     }
-} */
+}
 
-export const getUserByFilters = async (req, res, next) => {
+export const getDeletedUserById = async (req, res, next) => {
     try {
-        // 1. Desestructura para separar 'logic' del resto
-        const { logic, ...restFilters } = req.query; 
-        
-        let whereClause = {};
-        
-        // 2. Obtener los filtros REALES, excluyendo 'logic'
-        const actualFilters = restFilters; // { apellido_paterno: 'Lobos', apellido_materno: 'Olivares' }
-        const filterKeys = Object.keys(actualFilters);
+        const { id } = req.params;
 
-        // 3. Lógica Condicional para AND o OR
-        
-        if (logic === 'or' && filterKeys.length > 0) {
-            // Caso OR: Construir un array de condiciones para Op.or
-            const condicionesOR = [];
-            
-            for (const key of filterKeys) {
-                // Agregar cada filtro como un objeto de condición OR
-                // e.g., { apellido_paterno: 'Lobos' }
-                condicionesOR.push({ [key]: actualFilters[key] });
-            }
+        const user = await Usuario.findByPk(id, { paranoid: false });
 
-            // Aplicar el operador OR
-            whereClause = {
-                [Op.or]: condicionesOR
-            };
-
-            console.log("clausula OR:", whereClause);
-            
-        } else if (filterKeys.length > 0) {
-            // Caso AND (default o logic=and, o cualquier otro valor):
-            // Simplemente usar el objeto de filtros directamente.
-            // Sequelize lo interpreta como AND por defecto.
-            whereClause = actualFilters;
-            
-            console.log("clausula AND:", whereClause);
-        }
-
-        // Si no hay filtros, whereClause será {}, lo que devuelve todos los usuarios.
-        
-        // 4. Ejecutar la consulta con la cláusula dinámica
-        const users = await Usuario.findAll({
-            where: whereClause, // Ahora whereClause puede ser un objeto AND o un objeto OR
-            attributes: {
-                exclude: [
-                    'createdAt', 'updatedAt', 'deletedAt'
-                ]
-            }
-        });
-
-        // Tu utilidad de manejo de respuesta vacía
-        // isEmptyResponseData(users);
+        isEmptyResponseData(user);
 
         res.status(200).json({
-            message: "Usuarios encontrados con éxito",
+            message: 'Usuario encontrado con éxito',
             status: 200,
-            data: users
-        });
-
+            data: user,
+        })
     } catch (error) {
-        // next(error);
-        console.error(error); // Mejorar el manejo de errores
-        res.status(500).json({ message: "Error interno del servidor", error: error.message });
+        next(error)
+    }
+}
+
+export const restoreUser = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const user = await Usuario.findByPk(id, { paranoid: false });
+
+        isEmptyResponseData(user);
+
+        if (user.deletedAt = null) throw new ValidationError(`El usuario ${id} no ha sido eliminado`);
+        //metodo restore de sequelize
+        await user.restore();
+
+        res.status(200).json({
+            message: 'Usuario restaurado con éxito',
+            status: 200,
+            data: user,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const physicDelete = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const user = await Usuario.findByPk(id);
+
+        if (!user) {
+            throw new NotFoundError('No es posible encontrar el usuario que desea eliminar');
+        }
+
+        await user.destroy({ force: true });
+
+        res.status(200).json({
+            message: 'Usuario eliminado con éxito',
+            status: 200
+        })
+    } catch (error) {
+        next(error)
     }
 }

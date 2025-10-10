@@ -13,4 +13,3 @@ export const dbConfig = new Sequelize(
         dialect: process.env.DB_DIALECT,
     }
 )
-

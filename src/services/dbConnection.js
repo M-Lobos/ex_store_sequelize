@@ -7,7 +7,7 @@ export const dbConnection = async () => {
     try {
         await dbConfig.authenticate();
         initUsuario(dbConfig);
-        await dbConfig.sync();
+        await dbConfig.sync({alter: true}); //alter: true permite migrar la tabla ya sincronizada, para alterar las tablas
 
         console.log(`Se ha establecido conexión con la DB: ${DB}`);
     } catch (error) {
