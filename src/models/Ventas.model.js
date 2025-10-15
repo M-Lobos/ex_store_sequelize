@@ -2,7 +2,7 @@ import { Model, DataTypes } from "sequelize";
 
 export class Venta extends Model { };
 
-export const initVentas = (dbConfig) => {
+export const initVenta = (dbConfig) => {
 
     Venta.init(
         //definición de modelo y restrcciones
@@ -33,6 +33,5 @@ export const initVentas = (dbConfig) => {
             timestamps: true,
             paranoid: true
         }
-        
     )
 }

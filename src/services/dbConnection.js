@@ -1,13 +1,13 @@
 import { dbConfig } from "../config/db.config.js";
-import { initUsuario } from "../models/Usuario.model.js";
+import { initModels } from "../utils/db/initModels.js";
 
 let DB = process.env.DB_NAME
 
 export const dbConnection = async () => {
     try {
         await dbConfig.authenticate();
-        initUsuario(dbConfig);
-        await dbConfig.sync({alter: true}); //alter: true permite migrar la tabla ya sincronizada, para alterar las tablas
+        initModels(dbConfig)
+        await dbConfig.sync({ alter: true }); //alter: true permite migrar la tabla ya sincronizada, para alterar las tablas
 
         console.log(`Se ha establecido conexión con la DB: ${DB}`);
     } catch (error) {
