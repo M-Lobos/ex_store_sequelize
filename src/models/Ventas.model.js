@@ -11,13 +11,25 @@ export const initVentas = (dbConfig) => {
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV4,
                 primaryKey: true
+            },
+            fecha:{
+                type:DataTypes.DATE,
+                defaultValue: DataTypes.NOW,
+                allowNull: false
+            },
+            total: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                validate: {
+                    min:0
+                }
             }
         },
         //configuración modelo con sequelize
         {
             sequelize: dbConfig,
-            modelName: "Usuario",
-            tableName: "usuarios",
+            modelName: "Venta",
+            tableName: "ventas",
             timestamps: true,
             paranoid: true
         }
