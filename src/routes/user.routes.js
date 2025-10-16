@@ -3,24 +3,24 @@ import { createUser, getActiveUsersById, getAllActiveUsers, getAllUsersIncludedD
 
 const router = Router();
 
-router.post('/usuario', createUser);
-router.get('/usuarios', getAllActiveUsers);
-router.get('/usuario/id/:id', getActiveUsersById);
-router.get('/usuario/filter', getUserByFilters)
-router.put('/usuario/id/:id', updateUser)
-router.delete('/usuario/id/:id', userSoftDelete);
+router.post('/', createUser);
+router.get('/', getAllActiveUsers);
+router.get('/id/:id', getActiveUsersById);
+router.get('/filter', getUserByFilters)
+router.put('/id/:id', updateUser)
+router.delete('/id/:id', userSoftDelete);
 
 /* admin */
 /* restore */
-router.patch('/usuario/admin/restore/:id', restoreUser);
+router.patch('/admin/restore/:id', restoreUser);
 /* get all user included deleted */
-router.get('/usuarios/admin', getAllUsersIncludedDeleted);
+router.get('/admin', getAllUsersIncludedDeleted);
 /* get user by id included deleted */
-router.get('/usuario/id/admin/:id', getDeletedUserById);
+router.get('/id/admin/:id', getDeletedUserById);
 /* physic delete user */
-router.delete('/usuario/ademin/perma/delete/:id', physicDelete)
+router.delete('/admin/perma/delete/:id', physicDelete)
 /*  soft delete admin */
-router.delete('usuario/admin/delete/:id', userSoftDelete);
+router.delete('/admin/delete/:id', userSoftDelete);
 
 
 export default router; 

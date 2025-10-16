@@ -1,6 +1,5 @@
 //este archivo funciona como un archivo de barrido, donde crea las asociaciones entre tablas (modelos)
 import { Usuario } from "./Usuario.model.js";
-import { Producto } from "./Producto.model.js";
 import { Venta } from "./Ventas.model.js";
 
 //El método  .hasMany(modelo, opciones dentro del modelo), nos dice que el Usuario es a muchas ventas

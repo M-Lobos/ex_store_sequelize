@@ -20,6 +20,15 @@ export const isEmptyResponseData = (data) => {
     }
 }
 
+export const isAlreadyDeleted = (data) => {
+    if (data.deletedAt !== null) {
+        console.log(data.deletedAt);
+        const error = new Error(`El usuario con ID ${id} ya está inactivo/eliminado.`);
+        error.status = 409; // 409 Conflict
+        throw error;
+    }
+}
+
 /**
  * Valida que los registros que se evaluan no exístan PREVIAMENTE para valores que sean únicos, para evitar valores duplicados
  * @param {Model} Modelo        - Modelo constructor de los datos que se comunica con la DB

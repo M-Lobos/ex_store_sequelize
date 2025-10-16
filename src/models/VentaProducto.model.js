@@ -5,8 +5,6 @@ export class VentaProductos extends Model { };
 
 export const initVentaProducto = (dbConfig) => {
 
-    console.log("Inicializa modelo venta_venta productos");
-
     VentaProductos.init(
         {
             id: {
