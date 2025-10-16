@@ -145,7 +145,7 @@ export const getUserByFilters = async (req, res, next) => {
         const actualFilters = restFilters; // { key_filtro_1: 'value_filtro_1', key_filtro_2: 'value_filtro_2' }
         const filterKeys = Object.keys(actualFilters);
 
-
+        //Por defecto la lógica opera como AND, pero sino en la url debe especificiarse url/?logic=or&filter1&filter2...etc
         // 3. Lógica Condicional para AND o OR
         if (logic === 'or' && filterKeys.length > 0) {
             // Caso OR: Construir un array de condiciones para Op.or

@@ -1,5 +1,8 @@
+import { Op } from "sequelize";
 import { Producto } from "../models/Producto.model.js"
 import { isEmptyResponseData, validateExistData, isAlreadyDeleted } from "../utils/validations/validate.js";
+import { buildAndConditions, buildOrConditions } from '../utils/filters/filterClauseBuilder.js';
+import { normalizeFilters } from "../utils/filters/normalizeFilters.js";
 
 
 export const createProduct = async (req, res, next) => {
@@ -113,3 +116,86 @@ export const productSoftDelete = async (req, res, next) => {
 }
 
 //filtro básico
+export const getProductosByfilters = async (req, res, next) => {
+    try {
+        const { logic, ...restOfFilters } = req.query;
+
+        console.log("logica y filtro", logic, restOfFilters);
+
+        let whereClause = {}
+
+        const actualFilters = restOfFilters;
+        const filterKeys = Object.keys(actualFilters);
+
+        console.log("filter keys", filterKeys);
+
+        if (logic === 'or' && filterKeys.length > 0) {
+            const conditionOr = [];
+            for (const key of filterKeys) {
+                conditionOr.push({ [key]: actualFilters[key] });
+                console.log("arreglo conditionOr", key, conditionOr)
+            }
+
+            whereClause = {
+                [Op.or]: conditionOr
+            }
+
+        } else if (filterKeys.leng > 0) {
+            whereClause = actualFilters
+        }
+
+        const productFiltered = await Producto.findAll({
+            where: whereClause,
+            attributes: {
+                exclude: [
+                    'createdAt', 'updatedAt', 'deletedAt'
+                ]
+            }
+        });
+
+        isEmptyResponseData(productFiltered);
+
+        res.status(200).json({
+            message: "Productos filtrados con éxito",
+            status: 200,
+            data: productFiltered
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+//filtro avanzado
+
+// Refactor recomendado del controlador
+export const getProductosByAdvFilters = async (req, res, next) => {
+    try {
+        const { logic, ...restOfFilters } = req.query || {};
+
+        // Normaliza las queries tipo "price[gt]=10" a { price: { gt: 10 } }
+        const normalizedFilters = normalizeFilters(restOfFilters);
+
+        let whereClause = null;
+        const hasFilters = normalizedFilters && Object.keys(normalizedFilters).length > 0;
+
+        if (hasFilters) {
+            whereClause = logic === 'or'
+                ? buildOrConditions(normalizedFilters)
+                : buildAndConditions(normalizedFilters);
+        }
+
+        const products = await Producto.findAll({
+            where: whereClause || {},
+            attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] },
+        });
+
+        return res.status(200).json({
+            message: 'Productos filtrados con éxito',
+            status: 200,
+            data: products
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
