@@ -1,4 +1,4 @@
-// --- NUEVA FUNCIÓN ---
+
 export const normalizeFilters = (query) => {
     const normalized = {};
 

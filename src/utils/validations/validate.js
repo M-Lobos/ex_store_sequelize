@@ -1,4 +1,4 @@
-import { Op } from "sequelize"
+import { Model, Op } from "sequelize"
 import { NotFoundError, ValidationError } from "../../errors/TypeError.js";
 
 export const ValidateIsArray = (data) => {
@@ -8,9 +8,9 @@ export const ValidateIsArray = (data) => {
         );
 }
 
-export const isEmptyData = (data) => {
+export const isEmptyData = (data, field) => {
     if (!data || data.length === 0) {
-        throw new ValidationError("La data ingresada está vacía")
+        throw new ValidationError(`La data en ${field} no puede estar vacía`)
     }
 }
 
@@ -29,9 +29,24 @@ export const isAlreadyDeleted = (data) => {
     }
 }
 
+export const isValidDate = (fecha) => {
+
+    if (!fecha) return new Date.now()
+
+    const parseDate = new Date(fecha);
+    if (isNaN(parseDate.getTime())) {
+        throw new ValidationError(`La fehca debe tener un formato de fecha válido; 
+                    YYYY-MM-DD`)
+    }
+    return parseDate;
+}
+
+
+
+
 /**
  * Valida que los registros que se evaluan no exístan PREVIAMENTE para valores que sean únicos, para evitar valores duplicados
- * @param {Model} Modelo        - Modelo constructor de los datos que se comunica con la DB
+ * @param {Model} Model        - Modelo constructor de los datos que se comunica con la DB
  * @param {object} data         - Datos a evaluar en la petición hacia la DB
  * @param {Array<string>} field        - Campo que se desea evaluar en la clausula where
  * @param {string} excluidID    - ID en formato UUID que será excluída de esta validación. Por defecto Null
@@ -68,3 +83,27 @@ export const validateExistData = async (Modelo, data, fields, excluidID = null) 
 
 }
 
+/**
+ * Valida que exista un registro dentro deun modelo basado en su pk 
+ * @param {Model} Model                             - La tabla que se desea implementar en la función
+ * @param {String} pk                               - Primary Key para ejecutar búsqueda en la tabla del modelo
+ * @param {Boolean} transaction                     - Indica si la función es o no llamada dentro de una tarnsacción
+ * @param {Promise<object>} transactionConfig       - Variable que contiene el Beggin de la transacción de sequelize
+ * @throws {NotFoundError}                          - Error si se no encuentra la data dentro del modelo mediante la PK
+ * @returns {Promise<object>}                       - Retorna la data del modelo consultado mediante su Pk 
+ */
+
+export const notFoundDaraRequestByPk = async (Model, pk, transaction = false, transactionConfig) => {
+
+    const data = null
+
+    if (transaction) {
+        data = await Model.findByPk(pk, { transaction: transactionConfig })
+    } else {
+        data = await Model.findByPk(pk)
+    }
+
+    if (!data) throw NotFoundError(`Datos con pk ${pk}en la tabla ${Model.tableName} no encontrados`);
+
+    return data
+}
