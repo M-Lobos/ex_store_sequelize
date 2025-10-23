@@ -189,7 +189,7 @@ export const getProductosByAdvFilters = async (req, res, next) => {
             attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] },
         });
 
-        return res.status(200).json({
+        res.status(200).json({
             message: 'Productos filtrados con éxito',
             status: 200,
             data: products

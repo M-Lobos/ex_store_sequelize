@@ -32,13 +32,14 @@ export const isAlreadyDeleted = (data) => {
 export const isValidDate = (fecha) => {
 
     if (!fecha) return new Date.now()
-
     const parseDate = new Date(fecha);
+
     if (isNaN(parseDate.getTime())) {
-        throw new ValidationError(`La fehca debe tener un formato de fecha válido; 
-                    YYYY-MM-DD`)
+        throw new ValidationError(
+            "La fecha debe tener el formato adecuado de YYYY-MM-DD"
+        );
     }
-    return parseDate;
+    return parseDate
 }
 
 
@@ -94,11 +95,20 @@ export const validateExistData = async (Modelo, data, fields, excluidID = null) 
  */
 
 export const notFoundDaraRequestByPk = async (Model, pk, transaction = false, transactionConfig) => {
+    // los argumentos transaction y transactionConfig {variable que contiene la configuración de sequelize definida como "const transaction = await dbConfig.transaction()" en el controlador"} permiten que la función se abstracta y aplicable a varios controladores, respetando los criterios ACID 
 
-    const data = null
+    //  así si el controlador no actúa sobre una transacción los argumentos sólo son el Modelo y su Pk
+    let data = null
 
     if (transaction) {
         data = await Model.findByPk(pk, { transaction: transactionConfig })
+
+        /* el Objeto de configuraciones posee un campo transaction:
+            {transaction: transactionConfig} (para esta función)
+
+            Esta recibe la configuración de la transacción, en este caso el BEGIN de la misma (definido como const transaction = await dbConfig.transaction()" en el controlador) asegurándose de cumplir los criterios ACID 
+        */
+
     } else {
         data = await Model.findByPk(pk)
     }

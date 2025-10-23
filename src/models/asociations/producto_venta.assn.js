@@ -1,5 +1,5 @@
 import { Producto } from "../Producto.model.js"
-import { VentaProductos } from "../VentaProducto.model.js"
+import { VentasProductos } from "../VentaProducto.model.js"
 import { Venta } from "../Ventas.model.js"
 
 
@@ -7,17 +7,19 @@ import { Venta } from "../Ventas.model.js"
 export const setupVentaProducto = () => {
 
     Venta.belongsToMany(Producto, {
-        through: VentaProductos,
+        through: VentasProductos,
         foreignKey: 'ventaId',
         otherKey: 'productoId',
         as: 'productos'
     })
 
     Producto.belongsToMany(Venta, {
-        through: VentaProductos,
+        through: VentasProductos,
         foreignKey: 'productoId',
         otherKey: 'ventaId',
         as: 'ventas'
     })
 
 }
+
+

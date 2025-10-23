@@ -18,6 +18,8 @@ export const setupUsuarioVenta = () => {
     })
 }
 
+
+
 /* Esto funciona de la siguente forma
     Ventas emite una foreingKey llamada usuarioId...
     La venta que pertenece a usuario debe ENCONTRARSE con la foreingKey usuarioId...
