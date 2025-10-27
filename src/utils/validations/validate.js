@@ -31,7 +31,7 @@ export const isAlreadyDeleted = (data) => {
 
 export const isValidDate = (fecha) => {
 
-    if (!fecha) return new Date.now()
+    if (!fecha) return new Date();
     const parseDate = new Date(fecha);
 
     if (isNaN(parseDate.getTime())) {
