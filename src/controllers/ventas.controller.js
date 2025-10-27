@@ -60,6 +60,10 @@ export const createVentaConProductos = async (req, res, next) => {
 
             const productoData = await notFoundDaraRequestByPk(Producto, producto.productoId, true, transaction);
 
+            //manejo de stock
+            productoData.stock = productoData.stock - producto.cantidad
+            productoData.save()
+
             const subtotal = productoData.price * producto.cantidad;
             total += subtotal
         }
