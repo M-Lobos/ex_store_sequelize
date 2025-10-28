@@ -100,7 +100,7 @@ export const createVentaConProductos = async (req, res, next) => {
 
             const ventaProductoData = {
                 // debe tener los mismos elementos del modelo ventaProducto para que exista correspondencia 
-                ventasId: venta.id,
+                ventaId: venta.id,
                 productoId: productoData.id,
                 cantidad: producto.cantidad,
                 subtotal: subtotal // puedo omitir ya que valor y campo comparten nombre
@@ -127,3 +127,76 @@ export const createVentaConProductos = async (req, res, next) => {
 
 }
 
+//este controlador traerá información detallada de la venta,que no se encuentra en la tabla venta-producto, si no dispersa entre varios modelos
+export const getAllSalesWithDetails = async (req, res, next) => {
+    try {
+        const sales = await Venta.findAll({
+            //include es lo que hace los JOIN 
+            include: //siempre es una arreglo, que contiene la estructuras que estoy buscando
+                [
+                    //se define un objeto nuevo, que le dice a Sequelize a qué modelo se está aludiendo
+                    {
+                        model: Usuario,
+                        as: "usuario",
+                        attributes: ['id', 'nombre', 'apellido_paterno', 'email']
+                    },
+                    {
+                        model: Producto,
+                        as: "productos",
+                        //Es posible pedir detalles de la tabla intermedia que estén relacionados al modelo mediante el atributo "through". No es necesario indicar la tabla intermedia  puesto que la relación ya ha sido definida en las asociaciones del modelo (solo con relación muchos es a muchos, si no, no la encontrará).
+                        through: {
+                            attributes: ['cantidad', 'subtotal']
+                        },
+                        attributes: ['id', 'nombre', 'price']
+                    }
+                ],
+            order: [['createdAt', 'DESC']]
+        })
+
+        res.status(200).json({
+            message: 'Ventas obtenidas con éxito',
+            status: 200,
+            data: sales
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+export const getSalesByUserId = async (req, res, next) => {
+
+    try {
+        console.log(req.params)
+        const { usuarioId } = req.params;
+        const sales = await Venta.findAll({
+            where: { usuarioId },
+            include: [
+                {
+                    model: Usuario,
+                    as: 'usuario',
+                    attributes: ['id', 'nombre', 'email', 'telefono']
+                },
+                {
+                    model: Producto,
+                    as: 'productos',
+                    through: {
+                        attributes: ['cantidad', 'subtotal']
+                    },
+                    attributes: ['id', 'nombre', 'price']
+                }
+            ],
+            attribute: { exclude: ['usuarioId',] },
+            limit: 10,
+        })
+
+        res.status(200).json({
+            message: 'Ventas obtenidas con éxito',
+            status: 200,
+            data: sales
+        })
+    } catch (error) {
+        next(error)
+    }
+}
